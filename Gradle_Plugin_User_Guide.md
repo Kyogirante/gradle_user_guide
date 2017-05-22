@@ -1,11 +1,12 @@
+
 # Gradle Plugin User Guide
 
-## 1. 新工具目标
-- 能够很简单地复用代码和资源
-- 能够很简单地构建几种不同版本参数的应用
-- 能够很简单地配置、扩展、自定义构建过程
+## 1. 新工具介绍（Introduction）
+- 能够复用代码和资源
+- 能够构建几种不同版本参数的应用
+- 能够配置、扩展、自定义构建过程
 
-### 1.1 为什么选择Gradle
+### 1.1 为什么选择Gradle（Why Gradle?）
 Gradle是一款具有优势的构建工具，通过插件可以自定义构建过程。主要优势如下：
 
 - 基于Groovy的领域特定语言（DSL），用于描述和操作构建过程
@@ -14,10 +15,14 @@ Gradle是一款具有优势的构建工具，通过插件可以自定义构建�
 - 插件可以暴露自身的语言和接口api给构建文件使用
 - 支持IDE集成
 
-## 2. 工程基本配置
+### 2.2 需求（Requirements）
+- Gradle 2.2（Gradle版本是2.2及以上，因为文档中有些新特性）
+- SDK with Build Tools 19.0.0.
+
+## 2. 工程基本配置（Basic Project Setup）
 Gradle工程默认的配置文件名称是`build.gradle`，在主工程的根目录下。
 
-### 2.1 配置文件示例
+### 2.1 配置文件示例（Simple build files）
 下面是一个Android工程的最简单配置文件的内容。
 
 ```
@@ -55,7 +60,7 @@ android {
 sdk.dir=/path/to/Android/Sdk
 ```
 
-### 2.2 工程结构
+### 2.2 工程结构（Project Structure）
 Android工程文件有默认的目录结构。Gradle遵循约定由于配置规则，提供合理的默认值。工程以两个目录为主，一个是工程代码目录，一个是测试代码目录。
 
 - src/main/
@@ -80,7 +85,7 @@ Android工程中有一些独有的目录：
 
 **src/main/AndroidManifest.xml是自动创建的，不需要手动创建**
 
-#### 2.2.1 配置目录结构
+#### 2.2.1 配置目录结构（Configuring the Structure）
 默认的目录结构并不能完全适配所有情况，用户可以配置目录结构。[点击这里](https://docs.gradle.org/current/userguide/java_plugin.html#N12394)查看Java工程师怎么配置目录结构的。
 
 在Android工程中使用同样的格式，但是因为Android工程中有独有的一些目录，所以配置信息需要写在`android {}`这部分。下面示例中，工程代码使用原来的目录，修改测试代码的目录。
@@ -107,8 +112,8 @@ android {
 
 **注意：`setRoot()`重设目录位置，沿用之前的目录结构，这个是Android工程特有的**
 
-### 2.3 构建任务
-#### 2.3.1 通用任务
+### 2.3 构建任务（Build Tasks）
+#### 2.3.1 通用任务（General Tasks）
 使用插件（包含Java和Android插件）去构建工程会自动创建很多任务，通用的任务如下：
 
 - assemble，打包工程所产出的文件
@@ -125,7 +130,7 @@ android {
 
 如果工程中未做任何修改，执行`build`任务，每个任务描述后面都会加上`UP-TO-DATE`，这意味着这个任务不需要真正地执行，因为工程没有改动。这样每个任务都可以依赖其他任务，而且不需要其他任务做构建工作。
 
-#### 2.3.2 Java工程任务
+#### 2.3.2 Java工程任务（Java project tasks）
 引用`Java`插件时候，说明这个工程是个纯Java工程，会额外添加两个壳任务`jar`和`tests`。
 
 - assemble
@@ -137,7 +142,7 @@ android {
 
 大体上，用户可能只会调用`assemble`和`check`任务，很少调用其他任务。可以[点击这里](https://docs.gradle.org/current/userguide/java_plugin.html)查看Java工程所有的任务和任务描述。
 
-#### 2.3.3 Android工程任务
+#### 2.3.3 Android工程任务（Android tasks）
 引用`com.android.application`插件，说明这个工程是Android工程，在通用任务基础上会额外添加两个壳任务。
 
 - connectedCheck，查看是否有设备连接
@@ -173,7 +178,7 @@ Android工程中check类任务有各自的依赖。
 	- uninstallRelease
 	- uninstallDebugAndroidTest
 
-### 2.4 自定义基本构建
+### 2.4 自定义基本构建（Basic Build Customization）
 
 Android的插件提供了领域特定语言（DSL）来帮助用户直接地自定义构建过程。
 
@@ -256,7 +261,7 @@ android {
 上面代码作用：
 
 - 设置debug构建类型的包名是`<app appliationId>.debug`，这样一台设备上面就可以同时安装debug和release的包，不会出现包名冲突情况
-- 新建一个新的构建类型，名为`jnidebug`，`initWith(buildTypes.debug)`表示`buildTypes.debug`构建类型配置信息应用到这个构建中
+- 新建一个新的构建类型，名为`jnidebug`，`initWith(buildTypes.debug)`表示`buildTypes.debug`构建类型（Build Type）配置信息应用到这个构建中
 - 重新设置包名同时设为`jniDebuggable`为true，开启debug模式
 
 在`buildTypes`中新建一个新的构建类型非常方便，可以使用`initWith()`复用其他构建类型的构建参数。[点击这个](http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.BuildType.html)查看可配置的构建参数。
@@ -339,12 +344,13 @@ android {
 
 **注意：如果要根据具体情况来控制签名参数，就不能直接将key和密码等信息直接写在`signingConfigs`中，可以在`gradle.properties`文件中设置签名具体细节，然后在`signingConfigs`引用，具体[点击这里](http://stackoverflow.com/questions/18328730/how-to-create-a-release-signed-apk-file-using-gradle)查看**
 
-## 3. 工程依赖/Android库/多工程设置
+## 3. 工程依赖/Android库/多工程设置（Dependencies, Android Libraries and Multi-project setup）
+
 Gradle工程可以依赖其他组件，这些组件可能是外部jar包也可能是一个Gradle工程。
 
 
-### 3.1 依赖jar包
-#### 3.1.1 本库jar包
+### 3.1 依赖jar包（Dependencies on binary packages）
+#### 3.1.1 本库jar包（Local packages）
 依赖外部jar包，需要在`.gradle`文件中使用`compile`进行配置，示例如下：
 
 ```
@@ -449,7 +455,7 @@ android {
 
 上面所提到的多工程设置，`:libraries:lib1`, `:libraries:lib2`可以是Java工程，`:app`使用它们产生的jar包。但是，如果你想共享那些使用Android APIs或者使用Android-style的资源文件的代码，就不能使用上述的普通的Java工程，必须是Android库工程。
 
-#### 3.3.1 创建库工程
+#### 3.3.1 创建库工程（Creating a Library Project）
 库工程和平常的Android工程很类似，有一些细小的区别。构建库工程（Library）和构建一个应用工程（Application）是不同的，所以需要引用另一个插件'com.android.library'，和`com.android.application`插件一样，都是由`com.android.tools.build.gradle`jar包提供。下面是库工程`build.gradle`文件的示例。
 
 ```
@@ -476,10 +482,10 @@ android {
 
 这个库工程使用sdk编译版本是23，`SourceSet`、`buildTypes`和`dependencies`都沿用他们所在的主工程，当然，也可以在库工程自定义这些构建信息。
 
-#### 3.3.2 库工程和应用工程（主工程）的区别
+#### 3.3.2 库工程和应用工程（主工程）的区别（Differences between a Project and a Library Project）
 库工程主要产出一个代表Android库的aar包，里面包括编译后的代码（jar包和.so文件）和一些资源文件（manifest、res、assets）；库工程也可以构建出一个测试apk用于测试库工程，这个测试apk是独立于主工程apk的，库工程有`assembleDebug`和`assembleRelease`壳任务，所以用指令构建库工程和构建主工程是没有区别的。其余地方，库功臣和主工程是相同的。他们都有构建类型`buildTypes`和定制版本`product flavors`(后续会讲解)，可以产出多个版本的aar包。注意`buildTypes`中大多数构建参数不适用于库工程，同时，可以通过更改`sourceSet`更改库工程的内容，这取决于库工程是被主工程使用，还是用于测试。
 
-#### 3.3.3 引用库工程
+#### 3.3.3 引用库工程（Referencing a Library）
 引用库工程示例如下：
 
 ```
@@ -493,7 +499,7 @@ android {
 }
 ```
 
-#### 3.3.4 发布库工程
+#### 3.3.4 发布库工程（Library Publication）
 库工程会默认发布`release`版本，这个版本可以被其他所有的工程引用，与这些工程的构建版本无关。可以通过设置参数控制库工程发布的版本，示例如下：
 
 ```
@@ -583,7 +589,7 @@ android {
 ### 5.2 Build Type + Product Flavor = Build Variant
 > 构建类型 + 定制版本 = 构建版本（应用版本）
 
-就像上文提到的，每一个构建类型（buildType）都可以构建一个apk，同样的，每一个定制版本（productFlavor）都可以构建一个apk，这样的话，构建类型（buildType）和定制版本（productFlavor）结合就会形成一个新的apk，也就是构建版本（Build Variant）。默认有两种构建类型`debug`和`release`，再加上上文定义的`flavor1`和`flavor2`，就会形成四种组合，代表四种不同的构建版本（应用版本）：
+就像上文提到的，每一个构建类型（buildType）都可以构建一个apk，同样的，每一个定制版本（productFlavor）都可以构建一个apk，这样的话，构建类型（buildType）和定制版本（productFlavor）结合就会形成一个新的apk，也就是构建版本。默认有两种构建类型`debug`和`release`，再加上上文定义的`flavor1`和`flavor2`，就会形成四种组合，代表四种不同的构建版本：
 
 - Flavor1 - debug
 - Flavor1 - release
@@ -668,9 +674,10 @@ dependencies {
 
 构建版本目录资源的优先级高于构建类型资源目录。
 
-现在基本知道，`buildTypes`、`productFlavor`、`buildVariants`都有自己的资源目录，资源优先级是`buildVariants` > `buildType` > `productFlavor` > 主工程。
+现在基本知道，`buildTypes`、`productFlavor`、`buildVariants`都有自己的资源目录，资源优先级是：
+> `buildVariants` > `buildType` > `productFlavor` > 主工程。
 
-### 5.5 构建任务
+### 5.5 构建任务（Building and Tasks）
 
 上文中提到，每新建一种构建类型`buildType`，都会自动创建一个名为`assemble<Build Type Name>`的新任务。
 
@@ -682,6 +689,338 @@ dependencies {
 
 `assemble`会构建所有版本的apk。
 
-### 5.6 多flavor构建
+### 5.6 多flavor构建（Multi-flavor variants）
+
+**注：原文中`dimension of Product Flavors`，统一翻译为`productFlavor`类型，在某些文档中也翻译成维度**
+
+在某些场景下，一个应用可能需要基于多个标准创建多个版本。例如，Google Play的multi-apk支持四个不同的过滤器，这些用于创建不同apk的过滤器需要使用多个类型的`ProductFlavor`。
+
+例如，一个游戏有免费版本和付费版本，同时在multi-apk中需要支持ABI过滤器（ABI，二进制接口，可以让编译好的目标代码在所有支持该ABI的系统上运行，而无需对程序进行修改）。一个拥有两个版本和三个ABI过滤器的工程，需要创建六个apks（不考虑构建类型`buildType`），但是它们使用的源代码都是相同的，所以没有必要创建六个`productFlavor`。相反，只需要创建两个类型的`flavor`，就可以构建出所有的可能的版本组合。
+
+使用`flavorDimensions`数组来实现多个类型的`flavor`，每一个`productFlavor`被分到不同的类型，示例如下：
+
+```
+android {
+    ...
+
+
+    flavorDimensions "abi", "version"
+
+
+    productFlavors {
+        freeapp {
+            dimension "version"
+            ...
+        }
+
+        paidapp {
+            dimension "version"
+            ...
+        }
+
+
+        arm {
+            dimension "abi"
+            ...
+        }
+
+        mips {
+            dimension "abi"
+            ...
+        }
+
+        x86 {
+            dimension "abi"
+            ...
+        }
+    }
+}
+```
+
+`android.flavorDimensions`数组按顺序定义了可能使用到的`flavor`类型，每一个`productFlavor`声明自身的`flavor`类型。
+
+上面例子中，将`productFlavor`分为两个类型，`abi`类型[arm, mips, x86]和`version`类型[freeapp, paidapp]，加上默认的[debug, release]构建类型，将会组合出以下这些构建版本（Build Variant）：
+
+- x86-freeapp-debug
+- x86-freeapp-release
+- arm-freeapp-debug
+- arm-freeapp-release
+- mips-freeapp-debug
+- mips-freeapp-release
+- x86-paidapp-debug
+- x86-paidapp-release
+- arm-paidapp-debug
+- arm-paidapp-release
+- mips-paidapp-debug
+- mips-paidapp-release
+
+`android.flavorDimensions`数组定义的`flavor`类型顺序非常重要。
+
+上述每一个构建版本名称都由以下几个属性构成：
+
+- android.defaultConfig
+- abi类型
+- version类型
+
+多`flavor`工程也有自身的资源目录，和构建版本目录相似但是目录名称**不包含构建类型**，例如：
+
+- android.sourceSets.x86Freeapp，资源目录是`src/x86Freeapp/`
+- android.sourceSets.armPaidapp，资源目录是`src/armPaidapp/`
+
+多`flavor`的资源目录优先级高于`productFlavor`资源目录，但是低于构建类型资源目录优先级。
+
+那么就可以列出整个工程资源优先级，资源优先级是：
+
+> `buildVariants` > `buildType` > 多`flavor` > `productFlavor` > 主工程
+
+### 5.7 测试（Testing）
+和正常测试相似。（待翻译）
+
+### 5.8 构建配置（BuildConfig）
+在编译时，Android Studio会生成一个类`BuildConfig`，这个类包含构建特定版本时用到的一些常量，用户可以根据这些常量执行不同的操作行为。例如：
+
+```
+private void javaCode() {
+    if (BuildConfig.FLAVOR.equals("paidapp")) {
+        doIt();
+    else {
+        showOnlyInPaidAppDialog();
+    }
+}
+```
+
+下面是`BuildConfig`类包含的一些常量：
+
+- boolean DEBUG – if the build is debuggable.
+- int VERSION_CODE
+- String VERSION_NAME
+- String APPLICATION_ID
+- String BUILD_TYPE – 构建类型，例如： "release"
+- String FLAVOR – `productFlavor`名称，例如： "paidapp"
+
+如果工程中使用了`flavorDimensions`多类型`flavor`，会自动生成额外的变量。以上述的配置文件为例：
+
+- String FLAVOR = "armFreeapp"
+- String FLAVOR_abi = "arm"
+- String FLAVOR_version = "freeapp"
+
+### 5.9 过滤构建版本（Filtering Variants）
+当添加`productFlavor`或者使用`flavorDimensions`设置多类型`flavor`，可能有些构建版本并不需要。例如，用户定义了两个`productFlavor`，一个是正常版本，另一个仿造数据用于测试。第二个`productFlavor`仅仅是在开发过程中有用，在构建发布包时不需要这个`productFlavor`，可以通过使用`variantFilter`过滤器移除不需要的构建版本。示例如下：
+
+```
+android {
+    productFlavors {
+        realData
+        fakeData
+    }
+
+    variantFilter { variant ->
+        def names = variant.flavors*.name
+
+        if (names.contains("fakeData") && variant.buildType.name == "release") {
+            variant.ignore = true
+        }
+    }
+}
+```
+
+使用以上配置后，工程就只有以下的构建版本：
+
+- realDataDebug
+- realDataRelease
+- fakeDataDebug
+
+[点击这里](http://google.github.io/android-gradle-dsl/current/com.android.build.api.variant.VariantFilter.html)查看可以过滤的构建属性。
+
+
+## 6. 构建定制进阶（Advanced Build Customization）
+### 6.1 混淆（Running ProGuard）
+`ProGuard`插件是Android插件中自带的，如果构建任务（Build Type）中通过设置`minifyEnabled`为true（意为使用混淆），混淆任务会自动创建。示例如下：
+
+```
+android {
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    productFlavors {
+        flavor1 {
+        }
+        flavor2 {
+            proguardFile 'some-other-rules.txt'
+        }
+    }
+}
+```
+
+构建版本同时使用构建类型（Build Type）和`productFlavor`中设置的混淆规则文件。
+
+默认有两个混淆规则文件：
+
+- proguard-android.txt
+- proguard-android-optimize.txt
+
+它们位于Android SDK中，使用`getDefaultProguardFile(fileName)`获取它们的绝对路径名，差别是第二个文件会启用优化。
+
+### 6.2 忽略资源（Shrinking Resources）
+
+这个配置设置为true，在构建打包时候，会自动忽略没有被使用到的文件。[点击这里](http://tools.android.com/tech-docs/new-build-system/resource-shrinking)查看详细信息。示例如下：
+
+```
+android {
+ buildTypes {
+        release {
+            shrinkResources true
+			  ...
+        }
+    }
+}
+```
+
+### 6.3 操作任务(Manipulating tasks)
+Java工程使用固定的任务一起协作最终打包工程。其中`classes`任务是用来编译Java源代码的，可以在`build.gradle`使用`classes`，它是`project.tasks.classes`的缩写。
+
+在Android工程中，如果要构建打包，可能会复杂一些，因为Android工程中有大量名字相同的任务，而且它们的名字是基于`buildType`和`productFlavor`生成的。
+
+为了解决这个问题，Android对象有两个属性：
+
+- applicationVariants，只适用于`com.android.application`插件
+- libraryVariants，只适用于`com.android.library`插件
+- testVariants，两种插件都适用
+
+这三个属性分别返回一个ApplicationVariant、LibraryVariant和TestVariant对象的[DomainObjectCollection](https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html)。
+
+注意，适用这三个collection中的任意一个，都会生成所有相对应的任务，也就是说使用collection后，就不需要再更改配置。
+
+DomainObjectCollection可以直接访问所有对象，或者通过过滤器进行筛选。
+
+```
+android.applicationVariants.all { variant ->
+   ....
+}
+```
+
+这三个Variant类共享下面这些属性：
+
+|属性名        |属性类型       |描述    |
+|:---         |:---         |:---|
+|name         |String       |BuildVariant名称，必须保证唯一|
+|description  |String       |BuildVariant的描述说明|
+|dirName      |String       |BuildVariant的子文件名，必须是唯一的可能会有多个，例如：debug/flavor1|
+|baseName     |String       |BuildVariant构建包的基础名字，必须唯一|
+|outputFile   |File         |BuildVariant的输出文件，是个可读写的属性|
+|processManifest|ProcessManifest|处理清单Manifest的任务|
+|aidlCompile  |AidlCompile  |编译AIDL文件的任务|
+|renderscriptCompile|RenderscriptCompile|处理Renderscript文件的任务|
+|mergeResources|MergeResources|合并资源的任务|
+|mergeAssets  |MergeAssets  |合并assets资源的任务|
+|processResources|ProcessAndroidResources|处理和编译资源文件的任务|
+|generateBuildConfig|GenerateBuildConfig|生成BuildConfig的任务|
+|javaCompile|JavaCompile|编译Java源代码的任务|
+|processJavaResources|Copy|处理Java资源的任务|
+|assemble|DefaultTask|BuildVariant构建壳任务|
+
+`ApplicationVariant`类还有以下附加属性：
+
+|属性名         |属性类型      |描述                 |
+|:---          |:---         |:---                |
+|buildType     |BuildType    |BuildVariant的构建类型|
+|productFlavors|List<ProductFlavor>| BuildVariant的`productFlavor`，不会为null但可以为空|
+|mergedFlavor  |ProductFlavor|合并`android.defaultConfig`和`variant.productFlavors`的任务|
+|signingConfig |SigningConfig|BuildVariant使用的签名|
+|isSigningReady|boolean      |true表示BuildVariant配置了签名所需要的信息|
+|testVariant   |BuildVariant |用于测试这个BuildVariant的BuildVariant|
+|dex           |Dex          |将代码打包成dex的任务，如果是库工程，那么这个任务不能为null|
+|packageApplication|PackageApplication|打包最终apk的任务，如果是个库工程，这个任务可以为null|
+|zipAlign      |ZipAlign     |zip压缩apk的任务，如果是个库工程或者apk不被签名，这个任务可以为null|
+|install       |DefaultTask  |安装apk任务，不能为null|
+|uninstall     |DefaultTask  |卸载apk任务          |
+
+`LibraryVariant`类有以下附加属性：
+
+|属性名         |属性类型       |描述               |
+|:---          |:---          |:---              |
+|buildType     |BuildType     |BuildVariant的构建类型|
+|mergedFlavor  |ProductFlavor |The defaultConfig values |
+|testVariant   |BuildVariant  |用于测试这个BuildVariant的BuildVariant|
+|packageLibrary|Zip           |用于打包aar的任务，如果是库工程，不能为null|
+
+`TestVariant`类有以下附加属性：
+
+|属性名         |属性类型       |描述               |
+|:---          |:---          |:---              |
+|buildType     |BuildType     |BuildVariant的构建类型|
+|productFlavors|List<ProductFlavor>| BuildVariant的`productFlavor`，不会为null但可以为空|
+|mergedFlavor  |ProductFlavor|合并`android.defaultConfig`和`variant.productFlavors`的任务|
+|signingConfig |SigningConfig|BuildVariant使用的签名|
+|isSigningReady|boolean      |true表示BuildVariant配置了签名所需要的信息|
+|testedVariant |BaseVariant  |被TestVariant测试的BaseVariant |
+|dex           |Dex          |将代码打包成dex的任务，如果是库工程，那么这个任务不能为null|
+|packageApplication|PackageApplication|打包最终apk的任务，如果是个库工程，这个任务可以为null|
+|zipAlign      |ZipAlign     |zip压缩apk的任务，如果是个库工程或者apk不被签名，这个任务可以为null|
+|install       |DefaultTask  |安装apk任务，不能为null|
+|uninstall     |DefaultTask  |卸载apk任务          |
+|connectedAndroidTest|DefaultTask|在连接设备上执行Android测试的任务|
+|providerAndroidTest |DefaultTask|使用拓展API执行Android测试的任务|
+
+Android特有任务类型的API：
+
+- ProcessManifest
+	- File manifestOutputFile
+- AidlCompile
+	- File sourceOutputDir
+- RenderscriptCompile
+	-	File sourceOutputDir
+	- File resOutputDir
+- MergeResources
+	- File outputDir
+- MergeAssets
+	- File outputDir
+- ProcessAndroidResources
+	- File manifestFile
+	- File resDir
+	- File assetsDir
+	- File sourceOutputDir
+	- File textSymbolOutputDir
+	- File packageOutputFile
+	- File proguardOutputFile
+- GenerateBuildConfig
+	- File sourceOutputDir
+- Dex
+	- File outputFolder
+- PackageApplication
+	- File resourceFile
+	- File dexFile
+	- File javaResourceDir
+	- File jniDir
+	- File outputFile
+		- 在Variant对象中修改`outputFile`属性可以改变最终输出的文件夹.
+- ZipAlign
+	- File inputFile
+	- File outputFile
+		- 在Variant对象中修改`outputFile`属性可以改变最终输出的文件夹.
+
+每一个任务类型的API由于Gradle的工作方式以及Android插件配置方式而受到限制。首先，Gradle任务只能被配置输入和输出的目录以及一些可能使用到的常量，其次大多数任务的输出都不是固定单一的，一般都混合了sourceSet、Build Type和Product Flavor中的值。这都是为了保证构建文件的简单和可读性，让开发者通过DSL语言去修改构建过程，而不是深入修改任务并改变构建过程。
+
+同时，除了`ZipAlign`任务，其他类型的任务都需要设置私有数据让它们运行，这就意味着无法手动创建这些类型的新任务。
+
+这些API也有可能被更改，目前大部分API都是围绕着给定任务的输入输出来添加外的处理。
+
+
+### 6.4 配置JDK版本（Setting language level）
+默认会根据`compileSdkVersion`来选择JDK版本，可以通过`compileOptions`设置编译时使用的JDK版本。示例如下：
+
+```
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_6
+        targetCompatibility JavaVersion.VERSION_1_6
+    }
+}
+```
+
 
 
