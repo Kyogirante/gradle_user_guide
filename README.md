@@ -1,4 +1,3 @@
-[TOC]
 # Gradle Plugin User Guide
 
 ## 0. 前言
