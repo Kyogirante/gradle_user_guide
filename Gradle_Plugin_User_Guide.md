@@ -1,6 +1,11 @@
 
 # Gradle Plugin User Guide
 
+## 0. 前言
+完全由个人翻译，能力有限，有些细节地方翻译不是很通顺，大家可以参考[Gradle Plugin User Guide](http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Testing1)英文版本阅读，如果有问题，欢迎指正。
+
+转载请事先沟通，未经允许，谢绝转载。
+
 ## 1. 新工具介绍（Introduction）
 - 能够复用代码和资源
 - 能够构建几种不同版本参数的应用
