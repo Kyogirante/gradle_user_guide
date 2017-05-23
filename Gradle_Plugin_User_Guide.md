@@ -46,7 +46,7 @@ android {
 
 配置内容主要分为三部分。
 
-- `buildscript{}`，这个部分主要配置在构建过程中的依赖。上面示例中，声明使用`jcenter`依赖库，声明了一个maven库的依赖`com.android.tools.build:gradle:1.3.1`，是指依赖Android的gradle插件，版本是1.3.1。（关于Android Gradle Plugin版本和Gradle版本关系，[点这里](https://developer.android.com/studio/releases/gradle-plugin.html)）
+- `buildscript{}`，这个部分主要配置在构建过程中的依赖。上面示例中，声明使用`jcenter`依赖库，声明了一个maven库的依赖`com.android.tools.build:gradle:1.3.1`，是指引入gradle集成工具，版本是1.3.1。（关于Android Gradle Plugin版本和Gradle版本关系，[点这里](https://developer.android.com/studio/releases/gradle-plugin.html)）
 - `apply plugin`，引用插件，`com.android.application`这个插件用于构建Android工程
 - `android {}`，这部分是配置构建Android工程的参数。`compileSdkVersion`和`buildToolsVersion`是必须的
 
@@ -121,7 +121,7 @@ android {
 - build， 执行assemble任务和check任务
 - clean，清除工程的产出的文件
 
-`assemble`、`check`、`build`这三个任务实际上并不做任何事，他们只是一个壳任务，实际上是由所引用的插件去执行具体的任务。
+`assemble`、`check`、`build`这三个任务实际上并不做任何事，他们只是一个壳任务，实告诉Gradle去执行那些的任务。
 
 不管什么工程，依赖了什么插件，都可以反复去调用同一个任务。例如引用一个`findBugs`插件，会创建一个新的任务，让`check`任务依赖这个新任务，这样每次调用`check`任务时候，新建的任务也会执行。
 
@@ -537,17 +537,138 @@ dependencies {
 
 **注意：发布版本的`defaultPublishConfig`变量的内容必须是构建版本的完整名**
 
-**注意：一旦设置了`publishNonDefault true`，会将所有版本的aar包都上传到统一maven仓库，这种做法是不合理的，一个maven仓库目录应该仅对应一个系列版本的aar包，例如`debug`和`release`版本的aar包分别在不同的maven仓库目录中，或者保证不同版本的依赖仅仅发生在工程内部，不上传到maven仓库。**
+**注意：一旦设置了`publishNonDefault true`，会将所有版本的aar包都上传到统一maven仓库，但是，这种做法是不合理的，一个maven仓库目录应该仅对应一个系列版本的aar包，例如`debug`和`release`版本的aar包分别在不同的maven仓库目录中，或者保证不同版本的依赖仅仅发生在工程内部，不上传到maven仓库。**
 
-## 4. 测试（待翻译）
-### 4.1 Unit testing
-### 4.2 Basics and Configuration
-### 4.3 Resolving conflicts between main and test APK
-### 4.4 Running tests
-### 4.5 Testing Android Libraries
-### 4.6 Test reports
-### 4.6.1 Multi-projects reports
-### 4.7 Lint support
+## 4. 测试（Testing）
+可以建立一个测试工程集成到主工程当中，不需要单独新建一个测试工程。
+
+### 4.1 单元测试（Unit testing）
+Gradle 1.1版本之后就支持单元测试，[点击这里](https://developer.android.com/training/testing/start/index.html)查看详情。本章所提及的真机测试`instrumentation tests`，是指需要单独构建一个测试apk，运行在真机或者模拟器上的一种测试。
+
+### 4.2 基本配置（Basics and Configuration）
+上文中提到Android工程中默认有两个目录`src/main/`、`src/androidTest/`。使用`src/androidTest/`这个目录中的资源会构建一个使用Android测试框架，并且布署到真机（或测试机）上的测试apk来测试应用程序。Android测试框架包含单元测试、真机测试、UI自动化测试。测试apk的清单配置中的`<instrumentation>`节点会自动生成，同时用户也可以在`src/androidTest/AndroidManifest.xml`中添加额外模块用于测试。
+
+下面列出测试apk中可能用到的属性，[点击这里](http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.ProductFlavor.html)查看详情：
+
+- testApplicationId
+- testInstrumentationRunner
+- testHandleProfiling
+- testFunctionalTest
+
+这些属性是在`andorid.defaultConfig`中配置的，示例如下：
+
+```
+android {
+    defaultConfig {
+        testApplicationId "com.test.foo"
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testHandleProfiling true 
+        testFunctionalTest true
+    }
+}
+```
+
+在测试程序的清单配置（manifest）中，`<instrumentation>`节点中的`targetPackage`属性会根据被测试的应用程式包名自动生成，这个属性不受自定义的`defaultConfig`配置和`buildType`配置所影响。这也是manifest文件需要自动生成的一个原因。
+
+另外，`androidTest`可以有自己的依赖配置，默认情况下，应用程序和它的依赖都会自动添加到测试应用的classpath中，也可以通过手动拓展测试的依赖，示例如下：
+
+```
+dependencies {
+    androidTestCompile 'com.google.guava:guava:11.0.2'
+}
+```
+
+使用`assembleAndroidTest`任务来构建测试apk，这个任务不依赖于主工程的`assemble`任务，当设置要执行测试时候，这个任务会自动执行。
+
+默认只有一个`buildType`会被测试，`debug`的构建类型，但是可以自定义修改被测试的`buildType`，示例如下：
+
+```
+android {
+    ...
+    testBuildType "staging"
+}
+```
+	
+### 4.3 解决冲突（Resolving conflicts between main and test APK）
+当启动真机测试的时候，主apk和测试apk会共享同一个classpath，一旦两个apk使用了同一个库，但是使用的是不同版本，gralde构建就会失败。如果Gradle没有捕获这种情况，应用程式在测试和实际使用中可能表现不同（崩溃只是其中一种表现）。
+
+为了促使构建成功，只需要让所有的apk使用同一个版本的库。如果这个冲突是发生在简介依赖中（没有直接在build.gradle中引入的库），只需要在`build.gradle`中引入这个库最新的版本即可，使用`compile`或者`androidTestCompile`。详情查看这里[Gradle's resolution strategy mechanism](https://docs.gradle.org/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html)。可以通过`./gradlew :app:dependencies` and `./gradlew :app:androidDependencies`查看工程的依赖树。
+
+### 4.4 执行测试（Running tests）
+上文中提到`check`类的任务（需要连接设备）是通过`connectedCheck`壳任务被唤起的，这个过程依赖`connectedDebugAndroidTest`任务，因此执行测试，需要执行`connectedDebugAndroidTest`任务，它会有以下操作：
+
+- 确认主应用和测试应用都被构建（依赖`assembleDebug`和`assembleDebugAndroidTest`任务）
+- 安装主应用和测试应用
+- 运行测试
+- 卸载主应用和测试应用
+
+如果有多个设备连接，所有的测试会并行在所有设备上运行，其中任何一个设备测试失败，测试就失败。
+
+### 4.5 测试Andorid库（Testing Android Libraries）
+测试Andriod库和测试Android程序是相同的。不同的是Android库作为依赖直接继承到测试应用中，这样测试apk不仅包含测试的代码还包含这个库以及这个库的依赖。Android库的清单配置会合并到测试程序的清单配置中。`androidTest`任务改为只安装测试应用（没有其他应用），其他都是相同的。
+
+### 4.6 测试报告（Test reports）
+当执行单元测试后，Gradle会生成一份HTML报告方便查看测试结果。Andorid插件是在此基础上扩展了HTML报告，聚合了所有连接设备的测试结果。所有的测试结果以`XML`形式储存在`build/reports/androidTests/`目录下，这个目录也是可配的，示例如下：
+
+```
+android {
+    ...
+
+    testOptions {
+        resultsDir = "${project.buildDir}/foo/results"
+    }
+}
+```
+
+### 4.6.1 多工程测试报告（Multi-projects reports）
+在配置了多工程或者多依赖的工程中，当同时运行所有测试时候，针对所有的测试只生成一份测试报告是非常有用的。
+
+为了到达这个目的，需要使用另一个插件，这个插件是Android插件中自带的，示例如下：
+
+```
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.5.6'
+    }
+}
+
+
+apply plugin: 'android-reporting'
+```
+
+这必须添加到工程的根目录下，例如和`settings.gradle`同目录的`build.gralde`中，然后在根目录中使用使用一下指令运行所有测试，同时合并所有测试报告：
+
+```
+gradle deviceCheck mergeAndroidReports --continue
+```
+
+**注意：`--continue`是为了保证所有测试都执行，即使其中子项目中任何一个测试失败。如果没有这个选项，当有测试失败时候，整个测试过程就会中断。**
+
+### 4.7 Lint支持（Lint support）
+
+**注：lint是一种检查Android项目的工具**
+
+可以针对某一个构建版本执行lint，例如， `./gradlew lintRelease`，或者针对所有版本`./gradlew lint`，lint会生成一个记录被检查版本问题的报告。可以通过配置`lintOption`来设置lint细节，[点击这里](http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.LintOptions.html#com.android.build.gradle.internal.dsl.LintOptions)查看详情，示例如下：
+
+```
+android {
+    lintOptions {
+        // turn off checking the given issue id's
+        disable 'TypographyFractions','TypographyQuotes'
+
+        // turn on the given issue id's
+        enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+
+        // check *only* the given issue id's
+        check 'NewApi', 'InlinedApi'
+    }
+}
+```
 
 ## 5. 构建版本（Build Variants）
 使用新构建工具的目的之一是面对同一个工程，能够编译出不同的版本。
@@ -774,7 +895,44 @@ android {
 > `buildVariants` > `buildType` > 多`flavor` > `productFlavor` > 主工程
 
 ### 5.7 测试（Testing）
-和正常测试相似。（待翻译）
+测试多`flavor`项目和测试一般项目类似。
+
+`androidTest`的目录适用于所有`flavor`的测试，每一个`flavor`也有单独的测试资源目录，例如：
+
+- android.sourceSets.androidTestFlavor1，资源目录`src/androidTestFlavor1/`
+- android.sourceSets.androidTestFlavor2，资源目录`src/androidTestFlavor2/`
+
+类似的，每个`flavor`也有自己的依赖配置，示例如下：
+
+```
+dependencies {
+    androidTestFlavor1Compile "..."
+}
+```
+
+通过`deviceCheck`任务或者主工程的`androidTest`任务会执行`androidTestFlavor1Compile`任务。
+
+每个`flavor`也有自己任务用于执行测试，`androidTest<VariantName>`，例如：
+
+- androidTestFlavor1Debug
+- androidTestFlavor2Debug
+
+类似的，测试apk的构建、安装、卸载任务：
+
+- assembleFlavor1Test
+- installFlavor1Debug
+- installFlavor1Test
+- uninstallFlavor1Debug
+- ...
+
+最终，会根据`flavor`生成HTML测试报告，也会生成集成测试报告。测试报告的目录示例如下：
+
+- build/androidTest-results/flavors/<FlavorName>，单个`flavor`测试报告的目录
+- build/androidTest-results/all/，合并`flavor`的测试报告
+- build/reports/androidTests/flavors<FlavorName>，单个`flavor`测试报告的
+- build/reports/androidTests/all/，合并`flavor`的测试报告
+
+即使自定义目录，也只会改变根目录，里面的具体子目录不会改变。
 
 ### 5.8 构建配置（BuildConfig）
 在编译时，Android Studio会生成一个类`BuildConfig`，这个类包含构建特定版本时用到的一些常量，用户可以根据这些常量执行不同的操作行为。例如：
